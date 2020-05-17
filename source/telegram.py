@@ -7,11 +7,19 @@ import time
 import random
 import datetime as dt
 import requests, json #for openweather
+from itertools import islice
+from math import ceil
+from itertools import dropwhile, takewhile
+from datetime import datetime
+from instaloader import Instaloader, Profile
+import os
 
 led0 = 4
 GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 GPIO.setup(led0, GPIO.OUT)
+
+L = Instaloader(download_videos=False, download_video_thumbnails=False, download_geotags=False, download_comments=False, save_metadata=False)
 
 loveStickerIds = ( "CAACAgIAAxkBAAKhD168DBcckcMgYxD7lw-3l23VZGTlAALZAgAC8-O-C5aWAeDAzy8iGQQ", \
                    "CAACAgIAAxkBAAKhBF68C5-3BFWLjGSo-9IcGzX6FTS0AAIgAAOc_jIwtdxzHomqKuAZBA", \
@@ -93,6 +101,17 @@ def openWeatherForcest(ChatId,CityInput):
     else:
         bot.sendMessage(ChatId,"City Not Found")
         
+def sendIGPhotos(chat_id,path_in):
+    files = []
+    path = path_in
+    # r=root, d=directories, f = files
+    for r, d, f in os.walk(path):
+        for file in f:
+            if '.jpg' in file:
+                files.append(os.path.join(r, file))
+    for f in files:
+        bot.sendPhoto(chat_id, photo=open(f, 'rb'))
+    bot.sendMessage(chat_id, "Photos sending finished")
     
 
 def send(messageIn):
@@ -105,7 +124,7 @@ def handle(msg):
     command = msg['text']
     
     print("Message received from " + str(chat_id))
-    print("Message received " + str(command))
+    print("Message received " + command)
            
     if command == '/start' or command == '/Start':
         send("Welcome to Linn Bot")
@@ -138,6 +157,23 @@ def handle(msg):
     elif command == "/weather_singapore" or command == '/weather_singapore@Linn_0001_bot_for_Pi3BPlus_bot':
         openWeatherForcest(chat_id,"Singapore")
         
+    elif command.find('saveIG') != -1:
+        PROFILE = command.split()[1]
+        print("I got_"+PROFILE)
+        profile = Profile.from_username(L.context, PROFILE)
+        posts = profile.get_posts()
+        SINCE = datetime(2020, 5, 1)
+        UNTIL = datetime(2020, 5, 17)
+        filtered_posts = filter(lambda p: SINCE <= p.date <= UNTIL, posts)
+        send("Downloading " + PROFILE + " Instagram photos since 01/May/2020")
+        for post in filtered_posts:
+            L.download_post(post, PROFILE)
+        send("Download Finsished")
+    elif command.find('sendIG') != -1:
+        PROFILE = command.split()[1]
+        browseLoc = '/home/pi/Desktop/Telepot/Telepot/source/' + PROFILE + '/'
+        sendIGPhotos(chat_id,browseLoc)
+           
     else:
         send("Invalid Command")
 
