@@ -133,6 +133,7 @@ def handle(msg):
     if command == '/start' or command == '/Start':
         send("Welcome to Linn Bot")
         send("နေကောင်းလား")
+        send("ကိုမြင့်နိုင်ကြီး ဘေးမှကင်းဝေးပါစေလို. ဆုမွန်ကောင်းတောင်းလိုက်ပါတယ်")
        
     elif command.find('/light_on') != -1:
         GPIO.output(led0,1);
